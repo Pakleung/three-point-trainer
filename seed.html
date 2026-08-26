@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>写入今日训练数据</title>
+<style>
+  :root { --bg:#0f1115; --panel:#1a1d24; --accent:#E8743B; --txt:#e7ebf0; --muted:#8b93a1; }
+  * { box-sizing: border-box; }
+  body { margin:0; background:var(--bg); color:var(--txt); font-family:-apple-system,system-ui,"PingFang SC","Microsoft YaHei",sans-serif; padding:24px 18px; line-height:1.6; }
+  h1 { font-size:20px; margin:0 0 6px; }
+  p { color:var(--muted); font-size:14px; }
+  .card { background:var(--panel); border-radius:14px; padding:16px; margin:16px 0; }
+  table { width:100%; border-collapse:collapse; font-size:14px; }
+  th,td { text-align:left; padding:6px 4px; border-bottom:1px solid #2a2f3a; }
+  th { color:var(--muted); font-weight:600; }
+  button { display:block; width:100%; padding:14px; border:none; border-radius:12px; background:var(--accent); color:#fff; font-size:16px; font-weight:600; margin-top:8px; }
+  button:disabled { opacity:.5; }
+  #status { margin-top:14px; font-size:14px; min-height:20px; }
+  a.link { display:block; text-align:center; color:var(--accent); margin-top:14px; text-decoration:none; font-weight:600; }
+  .ok { color:#3ecf8e; } .warn { color:#ffd166; }
+</style>
+</head>
+<body>
+  <h1>写入今日训练数据</h1>
+  <p>这是一次性工具：把下面的数据写进本浏览器（与「三分训练」App 同一个数据库）。写完刷新 App 即可在分析页看到。</p>
+  <div class="card">
+    <table>
+      <thead><tr><th>点位</th><th>进球</th><th>出手</th><th>动作</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table>
+  </div>
+  <button id="seed-btn">写入数据</button>
+  <div id="status"></div>
+  <a class="link" href="./index.html">→ 打开三分训练 App</a>
+
+<script>
+// 与 app.js 完全一致的数据库配置
+const DB_NAME = "threePointTrainer";
+const STORE = "sessions";
+
+// 宁哥今天给的训练数据（未指定动作/时长 → 默认 常规训练 / 0 秒；日期用报告当天）
+const DATE = "2026-08-21";
+const MOVES = "常规训练";
+const DATA = [
+  { spot: "左底角",  made: 10, attempted: 26 },
+  { spot: "左翼45°", made: 10, attempted: 30 },
+  { spot: "弧顶",    made: 10, attempted: 22 },
+  { spot: "右翼45°", made: 10, attempted: 32 },
+  { spot: "右底角",  made: 10, attempted: 28 },
+];
+
+// 展示
+const tbody = document.getElementById("rows");
+DATA.forEach(d => {
+  const tr = document.createElement("tr");
+  tr.innerHTML = `<td>${d.spot}</td><td>${d.made}</td><td>${d.attempted}</td><td>${MOVES}</td>`;
+  tbody.appendChild(tr);
+});
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onupgradeneeded = (e) => {
+      const db = e.target.result;
+      if (!db.objectStoreNames.contains(STORE)) {
+        const os = db.createObjectStore(STORE, { keyPath: "id", autoIncrement: true });
+        os.createIndex("createdAt", "createdAt", { unique: false });
+      }
+    };
+    req.onsuccess = (e) => resolve(e.target.result);
+    req.onerror = (e) => reject(e.target.error);
+  });
+}
+
+function existingKeys(db) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readonly");
+    const os = tx.objectStore(STORE);
+    const all = os.getAll();
+    all.onsuccess = () => res(all.result || []);
+    all.onerror = () => rej(all.error);
+  });
+}
+
+function addOne(db, rec) {
+  return new Promise((res, rej) => {
+    const tx = db.transaction(STORE, "readwrite");
+    const os = tx.objectStore(STORE);
+    const r = os.add(rec);
+    r.onsuccess = () => res();
+    r.onerror = () => rej(r.error);
+  });
+}
+
+document.getElementById("seed-btn").addEventListener("click", async () => {
+  const btn = document.getElementById("seed-btn");
+  const status = document.getElementById("status");
+  btn.disabled = true;
+  try {
+    const db = await openDB();
+    const existing = await existingKeys(db);
+    const base = Date.parse(DATE + "T21:00:00");
+    let added = 0, skipped = 0;
+    for (let i = 0; i < DATA.length; i++) {
+      const d = DATA[i];
+      const isDup = existing.some(r => r.date === DATE && r.spot === d.spot && r.move === MOVES && r.made === d.made && r.attempted === d.attempted);
+      if (isDup) { skipped++; continue; }
+      await addOne(db, {
+        date: DATE, spot: d.spot, move: MOVES,
+        made: d.made, attempted: d.attempted, duration: 0,
+        createdAt: base + i * 60000,
+      });
+      added++;
+    }
+    if (added === 0 && skipped > 0) {
+      status.innerHTML = `<span class="warn">这 5 条数据已经写过了，没有重复写入。</span> 直接点下面打开 App 即可。`;
+    } else {
+      status.innerHTML = `<span class="ok">写入成功！</span> 新增 ${added} 条，跳过 ${skipped} 条重复。`;
+    }
+    btn.textContent = "已写入 ✓";
+  } catch (err) {
+    status.innerHTML = `<span class="warn">出错了：</span>${err.message}`;
+    btn.disabled = false;
+  }
+});
+</script>
+</body>
+</html>
