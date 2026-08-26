@@ -1,0 +1,13 @@
+# WorkBuddy 本地项目记忆，勿上传
+.workbuddy/
+
+# 构建产物（由 build_*.py 生成，非源码）
+dist/
+*.zip
+
+# 开发截图/素材
+screenshots/
+
+# 系统/编辑器
+.DS_Store
+Thumbs.db
