@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="三分训练">
+<meta name="theme-color" content="#3100f7">
+<title>三分训练</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon.png">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>🏀 三分训练</h1>
+  <nav class="tabs">
+    <button class="tab active" data-tab="train">训练</button>
+    <button class="tab" data-tab="overview">概览</button>
+    <button class="tab" data-tab="analysis">分析</button>
+  </nav>
+</header>
+<div id="ios-tip" class="ios-tip" hidden>
+  <span class="ios-tip-text">📲 想当 App 用？点 Safari 底部「分享」→「添加到主屏幕」，以后点图标离线也能用。</span>
+  <button id="ios-tip-ok" class="ios-tip-ok">知道了</button>
+</div>
+<main>
+  <!-- 训练 -->
+  <section id="tab-train" class="tab-panel active">
+    <div id="court-view">
+      <p class="hint">点击场上任意点位，进入它的训练</p>
+      <div id="court-svg"></div>
+    </div>
+    <div id="spot-view" hidden>
+      <button id="back-court" class="btn-back">← 返回球场</button>
+      <h2 id="spot-title" class="spot-title"></h2>
+      <div class="move-picker">
+        <div class="move-label">投篮动作</div>
+        <div id="move-buttons" class="move-buttons"></div>
+      </div>
+      <div class="timer">
+        <span class="timer-display" id="spot-time">00:00</span>
+        <button id="spot-timer-btn">开始</button>
+        <button id="spot-timer-reset">重置</button>
+      </div>
+      <div class="shot-row">
+        <button id="btn-made" class="btn-shot btn-made">🏀 进球<small>出手+1 命中+1</small></button>
+        <button id="btn-miss" class="btn-shot btn-miss">✕ 投失<small>打前沿 / 点篮筐定位</small></button>
+      </div>
+      <div class="miss-block">
+        <div class="miss-head">投失记录 · 篮筐俯瞰图<span class="miss-sub">点篮筐上对应位置 = 记 1 次失误（含篮板朝向，确认打框点）</span></div>
+        <div id="miss-ring"></div>
+        <button id="btn-no-rim" class="btn-ghost btn-block">没碰篮筐（空气球）</button>
+      </div>
+      <div class="live-rate" id="spot-rate">--</div>
+      <div class="mini-stats">
+        <span>出手 <b id="spot-att">0</b></span>
+        <span>命中 <b id="spot-made">0</b></span>
+      </div>
+      <div class="chart-block">
+        <h3>本次训练 · 投篮热力图</h3>
+        <div id="heat-hoop"></div>
+      </div>
+      <button id="save-record" class="btn-primary btn-block">保存这条记录</button>
+      <div class="history-box">
+        <div class="history-title">本点位最近记录</div>
+        <div id="spot-history"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 概览 -->
+  <section id="tab-overview" class="tab-panel">
+    <div id="overview-stats"></div>
+    <div id="overview-spots"></div>
+    <div id="overview-moves"></div>
+    <div class="backup-box">
+      <h3>数据备份</h3>
+      <p class="hint">导出 / 导入都是 <b>CSV</b> 格式（UTF-8，Excel / Numbers / WPS 直接打开，列：日期,点位,投篮动作,进球,出手,时长,命中率）。怕丢数据可再用下方 <b>JSON 全量备份</b>：一键导出全部记录，换手机 / 清缓存后用「导入备份」整体恢复。</p>
+      <button id="export-csv-btn" class="btn-secondary">导出 Excel (CSV)</button>
+      <button id="import-csv-btn" class="btn-secondary">导入 Excel (CSV)</button>
+      <input type="file" id="import-file" accept=".csv,text/csv" hidden>
+      <div class="backup-divider"></div>
+      <button id="export-json-btn" class="btn-secondary">导出备份 (JSON)</button>
+      <button id="import-json-btn" class="btn-secondary">导入备份 (JSON)</button>
+      <input type="file" id="import-json-file" accept=".json,application/json" hidden>
+    </div>
+  </section>
+
+  <!-- 分析 -->
+  <section id="tab-analysis" class="tab-panel">
+    <div id="north-star"></div>
+    <div class="chart-block">
+      <h3>各点位命中率（球场热力图）<span class="click-hint">· 点击点位看详情</span></h3>
+      <div id="chart-court"></div>
+    </div>
+    <div id="spot-drill" class="spot-drill" hidden></div>
+    <div class="chart-block">
+      <h3>命中率成长曲线（累计）</h3>
+      <div id="chart-trend"></div>
+    </div>
+    <div class="chart-block">
+      <h3>按投篮动作拆分命中率</h3>
+      <div id="chart-by-move"></div>
+    </div>
+    <div class="chart-block">
+      <h3>按点位拆分命中率</h3>
+      <div id="chart-by-spot"></div>
+    </div>
+    <div class="chart-block">
+      <h3>出手量走势（训练投入累计）</h3>
+      <div id="chart-volume"></div>
+    </div>
+    <div class="chart-block">
+      <h3>早期 vs 近期 命中率</h3>
+      <div id="chart-growth"></div>
+    </div>
+  </section>
+</main>
+<script src="app.js?v=2" defer></script>
+</body>
+</html>
