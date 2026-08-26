@@ -1,0 +1,33 @@
+{
+  "name": "三分训练",
+  "short_name": "三分训练",
+  "description": "三分投篮训练记录与分析",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "browser"],
+  "orientation": "portrait",
+  "categories": ["sports", "health", "fitness"],
+  "background_color": "#3100f7",
+  "theme_color": "#3100f7",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "apple-touch-icon.png",
+      "sizes": "180x180",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
