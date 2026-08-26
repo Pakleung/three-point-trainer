@@ -8,11 +8,13 @@
 
 ## 一、部署到手机（两种方式任选）
 
-### 方式一：GitHub Pages（推荐，自动发布）
+### 方式一：GitHub Pages（推荐，自动发布，本项目已部署）
+
+> 本项目已部署到 **https://pakleung.github.io/three-point-trainer/**，直接用 iPhone Safari 打开即可。下面是复刻 / 自行托管步骤。
 
 1. 把整个仓库推到 GitHub。
-2. 仓库 **Settings → Pages → Source** 选 **GitHub Actions**（本仓库已内置 `.github/workflows/deploy.yml`，推送 `main` 分支即自动发布）。
-3. 或者更简单：Source 选 **Deploy from a branch**，Branch 选 `main`、目录选根目录 `/ (root)`，保存后即可通过 `https://<用户名>.github.io/<仓库名>/` 访问。
+2. 仓库 **Settings → Pages → Source** 选 **Deploy from a branch**，Branch 选 `main`、目录选根目录 `/ (root)`，保存。
+3. 稍等 1~2 分钟构建完成，即可通过 `https://<用户名>.github.io/<仓库名>/` 访问；之后每次推 `main` 都会自动重新发布。
 4. 在 iPhone 的 Safari 打开该 https 地址 → 见下方「iPhone 安装步骤」即可变成离线 App。
 
 > 提示：`.nojekyll` 已就位，避免 GitHub Pages 忽略以 `.` 开头的文件（如 `apple-touch-icon.png` 之外的特殊资源）。
@@ -85,7 +87,6 @@ three-point-trainer/
 ├── build_standalone.py   # 生成单文件离线版 dist/three-point-trainer.html
 ├── build_app_package.py   # 打包完整安装包 zip + 同步 dist/
 ├── .nojekyll             # 让 GitHub Pages 不忽略特殊文件
-├── .github/workflows/deploy.yml  # GitHub Pages 自动部署
 └── README.md
 ```
 
